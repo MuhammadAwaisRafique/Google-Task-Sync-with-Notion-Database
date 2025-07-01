@@ -41,10 +41,14 @@ const DashboardPage = () => {
 
   const loadDashboardData = async () => {
     try {
+      console.log('Loading dashboard data...')
       const [syncResponse, statsResponse] = await Promise.all([
         api.getSyncStatus(),
         api.getTaskStats()
       ])
+      
+      console.log('Sync response:', syncResponse.data)
+      console.log('Stats response:', statsResponse.data)
       
       setSyncStatus(syncResponse.data)
       setTaskStats(statsResponse.data)

@@ -2,7 +2,7 @@ import axios from 'axios'
 
 class ApiService {
   constructor() {
-    this.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+    this.baseURL = import.meta.env.VITE_API_URL || '/api'
     this.client = axios.create({
       baseURL: this.baseURL,
       headers: {
@@ -12,8 +12,12 @@ class ApiService {
 
     // Response interceptor for error handling
     this.client.interceptors.response.use(
-      (response) => response,
+      (response) => {
+        console.log('API Response:', response.config.url, response.status)
+        return response
+      },
       (error) => {
+        console.error('API Error:', error.config?.url, error.response?.status, error.response?.data)
         if (error.response?.status === 401) {
           // Token expired or invalid
           localStorage.removeItem('token')
@@ -27,8 +31,10 @@ class ApiService {
   setAuthToken(token) {
     if (token) {
       this.client.defaults.headers.common['Authorization'] = `Bearer ${token}`
+      console.log('Auth token set:', token.substring(0, 20) + '...')
     } else {
       delete this.client.defaults.headers.common['Authorization']
+      console.log('Auth token cleared')
     }
   }
 
@@ -89,7 +95,10 @@ class ApiService {
   }
 
   async getTaskStats() {
-    return this.get('/tasks/stats')
+    console.log('Calling getTaskStats API...')
+    const response = await this.get('/tasks/stats')
+    console.log('Task stats response:', response.data)
+    return response
   }
 }
 

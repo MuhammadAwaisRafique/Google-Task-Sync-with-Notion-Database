@@ -6,7 +6,7 @@ import api from '../services/api'
 
 const LoginPage = () => {
   const navigate = useNavigate()
-  const { login, isAuthenticated } = useAuth()
+  const { login, isAuthenticated, loading: authLoading } = useAuth()
   const [searchParams] = useSearchParams()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -21,7 +21,10 @@ const LoginPage = () => {
   }, [searchParams])
 
   useEffect(() => {
-    if (isAuthenticated) {
+    // Only redirect if user is authenticated and there's no token in URL
+    // This prevents conflicts with TokenHandler
+    if (isAuthenticated && !window.location.search.includes('token=')) {
+      console.log('LoginPage: User is authenticated, redirecting to dashboard')
       navigate('/dashboard')
     }
   }, [isAuthenticated, navigate])
@@ -48,6 +51,24 @@ const LoginPage = () => {
       setError('Failed to initiate Google authentication')
       setLoading(false)
     }
+  }
+
+  // Debug function to clear authentication state
+  const handleClearAuth = () => {
+    localStorage.removeItem('token')
+    window.location.reload()
+  }
+
+  // Show loading spinner while checking authentication
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-blue-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+        <div className="flex justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+        </div>
+        <p className="text-center mt-4 text-gray-600">Checking authentication...</p>
+      </div>
+    )
   }
 
   return (
@@ -146,6 +167,13 @@ const LoginPage = () => {
               <p className="text-xs text-gray-500">
                 By continuing, you agree to our Terms of Service and Privacy Policy
               </p>
+              {/* Debug button - remove in production */}
+              <button
+                onClick={handleClearAuth}
+                className="mt-4 text-xs text-gray-400 hover:text-gray-600 underline"
+              >
+                Clear Auth State (Debug)
+              </button>
             </div>
           </div>
         </div>

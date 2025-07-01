@@ -1,4 +1,5 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const { authenticateToken } = require('../middleware/auth');
 const SyncedTask = require('../models/SyncedTask');
 
@@ -12,12 +13,17 @@ router.get('/', authenticateToken, async (req, res) => {
     const limit = parseInt(req.query.limit) || 20;
     const skip = (page - 1) * limit;
 
-    const tasks = await SyncedTask.find({ userId })
+    // Convert userId to ObjectId if it's a string
+    const userIdObj = mongoose.Types.ObjectId.isValid(userId) 
+      ? new mongoose.Types.ObjectId(userId) 
+      : userId;
+
+    const tasks = await SyncedTask.find({ userId: userIdObj })
       .sort({ lastSyncedAt: -1 })
       .skip(skip)
       .limit(limit);
 
-    const total = await SyncedTask.countDocuments({ userId });
+    const total = await SyncedTask.countDocuments({ userId: userIdObj });
 
     res.json({
       tasks: tasks.map(task => ({
@@ -52,9 +58,20 @@ router.get('/', authenticateToken, async (req, res) => {
 router.get('/stats', authenticateToken, async (req, res) => {
   try {
     const userId = req.user.userId;
+    
+    console.log('Getting task stats for user:', userId);
+
+    // Convert userId to ObjectId if it's a string
+    const userIdObj = mongoose.Types.ObjectId.isValid(userId) 
+      ? new mongoose.Types.ObjectId(userId) 
+      : userId;
+
+    // First, let's check if there are any tasks at all for this user
+    const totalTasks = await SyncedTask.countDocuments({ userId: userIdObj });
+    console.log('Total tasks found:', totalTasks);
 
     const stats = await SyncedTask.aggregate([
-      { $match: { userId: userId } },
+      { $match: { userId: userIdObj } },
       {
         $group: {
           _id: null,
@@ -73,6 +90,8 @@ router.get('/stats', authenticateToken, async (req, res) => {
     ]);
 
     const result = stats[0] || { total: 0, completed: 0, pending: 0, errors: 0 };
+    
+    console.log('Task stats result:', result);
 
     res.json({
       total: result.total,

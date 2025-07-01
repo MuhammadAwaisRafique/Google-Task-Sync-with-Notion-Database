@@ -17,6 +17,7 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(localStorage.getItem('token'))
 
   useEffect(() => {
+    console.log('AuthContext: Token changed:', token ? 'present' : 'absent')
     if (token) {
       api.setAuthToken(token)
       fetchUser()
@@ -25,15 +26,23 @@ export const AuthProvider = ({ children }) => {
     }
   }, [token])
 
+  // Note: Navigation is now handled in TokenHandler component
+  // This prevents navigation conflicts and ensures proper flow
+
   const fetchUser = async () => {
     try {
+      console.log('Fetching user data...')
       const response = await api.get('/auth/me')
+      console.log('User data received:', response.data)
       setUser(response.data.user)
     } catch (error) {
       console.error('Failed to fetch user:', error)
       logout()
     } finally {
-      setLoading(false)
+      // Add a small delay to ensure proper state updates
+      setTimeout(() => {
+        setLoading(false)
+      }, 100)
     }
   }
 
@@ -61,7 +70,7 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     updateUser,
-    isAuthenticated: !!token
+    isAuthenticated: !!token && !!user && !loading
   }
 
   return (
