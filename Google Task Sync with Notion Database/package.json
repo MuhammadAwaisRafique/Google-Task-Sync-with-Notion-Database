@@ -1,0 +1,20 @@
+{
+  "name": "google-tasks-notion-sync",
+  "version": "1.0.0",
+  "description": "A comprehensive Google Tasks to Notion synchronization application",
+  "main": "server/index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run server:dev\" \"npm run client:dev\"",
+    "server:dev": "cd server && npm run dev",
+    "client:dev": "cd client && npm run dev",
+    "build": "cd client && npm run build",
+    "start": "cd server && npm start",
+    "install:all": "npm install && cd server && npm install && cd ../client && npm install"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "keywords": ["google-tasks", "notion", "sync", "mern", "oauth2"],
+  "author": "Solutions Engineering Intern",
+  "license": "MIT"
+}
